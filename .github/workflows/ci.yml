@@ -17,4 +17,4 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install pytest
       - name: Unit tests (pytest)
-        run: pytest -v
+        run: PYTHONPATH=. pytest -v

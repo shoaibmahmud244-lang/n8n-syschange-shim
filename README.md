@@ -9,7 +9,7 @@ n8n 2.x disables the Execute Command node by default
 (`dist/modules/breaking-changes/rules/v2/disabled-nodes.rule.js` lists
 `n8n-nodes-base.executeCommand`). Re-enabling it would hand a browser-reachable
 web app arbitrary command execution on the host. This process exposes exactly
-two operations instead — `/plan` and `/approve` — and nothing else:
+two operations instead (`/plan` and `/approve`), with nothing else:
 
 * no "run arbitrary command" endpoint, no eval, no shell parameter
 * every operation is a **fixed argv** invoking `syschange-run`; the only

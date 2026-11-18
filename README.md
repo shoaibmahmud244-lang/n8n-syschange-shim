@@ -1,7 +1,19 @@
-# sandbox-shim
+# n8n-syschange-shim
 
 A deliberately narrow HTTP front for the local `syschange` orchestrator, so an
 n8n workflow can plan and approve system changes **without n8n having a shell**.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["n8n Webhook / Engine"] -->|Bearer Token + Fixed Argv| B["sandbox-shim (Port 9922)"]
+    B -->|Regex Run ID Validation| C{"Authorize Gate"}
+    C -->|Valid /plan| D["syschange-run plan"]
+    C -->|Valid /approve| E["syschange-run approve"]
+    C -->|Shell Injection / Bad Arg| F["400 Reject (Zero Shell)"]
+    D & E --> G[("Append-only Audit Log")]
+```
 
 ## Why this exists
 

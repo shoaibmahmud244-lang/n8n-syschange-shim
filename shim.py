@@ -35,10 +35,16 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-HOME = os.environ.get("HOME", "/home/solonext")
-SYSCHANGE = os.path.join(HOME, "ai-system", "syschange", "syschange-run")
-TOKEN_FILE = os.path.join(HOME, ".config", "sandbox-shim", "token")
-AUDIT = os.path.join(HOME, ".local", "state", "sandbox-shim", "audit.log")
+HOME = os.path.expanduser("~")
+SYSCHANGE = os.environ.get(
+    "SYSCHANGE_BIN", os.path.join(HOME, "ai-system", "syschange", "syschange-run")
+)
+TOKEN_FILE = os.environ.get(
+    "SHIM_TOKEN_FILE", os.path.join(HOME, ".config", "sandbox-shim", "token")
+)
+AUDIT = os.environ.get(
+    "SHIM_AUDIT_FILE", os.path.join(HOME, ".local", "state", "sandbox-shim", "audit.log")
+)
 # "auto" resolves the docker bridge gateway for the n8n network, so the shim keeps
 # working if `docker compose down` reassigns the subnet. Binding to the gateway
 # rather than 0.0.0.0 is what keeps this off the LAN.
@@ -87,6 +93,11 @@ def run(argv: list[str]) -> dict:
         return {"exit_code": 127, "stdout": "", "stderr": f"shim: {exc}"}
 
 
+def _match_group1(pattern: str, text: str) -> str | None:
+    m = re.search(pattern, text)
+    return m.group(1) if m else None
+
+
 def parse_plan(raw: str) -> dict:
     """Turn syschange's human-readable output into structured data.
 
@@ -99,8 +110,8 @@ def parse_plan(raw: str) -> dict:
       every executed run fall through to `applied=True, step_count=0`, which
       reads as success even when step sN had FAILED.
     """
-    run_id = (re.search(r"run id:\s*(\S+)", raw) or [None, None])[1]
-    risk = (re.search(r"risk\s*:\s*(\S+)", raw) or [None, None])[1]
+    run_id = _match_group1(r"run id:\s*(\S+)", raw)
+    risk = _match_group1(r"risk\s*:\s*(\S+)", raw)
     steps = []
     # Pending-format steps:  "  s10  [high]  sudo du ..."
     for m in re.finditer(r"^\s*(s\d+)\s+\[(\w+)\]\s+(.+)$", raw, re.M):

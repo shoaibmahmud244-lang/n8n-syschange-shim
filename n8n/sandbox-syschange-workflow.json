@@ -37,7 +37,6 @@
       "webhookId": "sandbox-syschange",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "a1000000-0000-4000-8000-0000000cc002",
           "name": "Sandbox Caller Key"
         }
       },
@@ -128,7 +127,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://172.31.90.1:9922/approve",
+        "url": "={{ ($env.SHIM_URL || 'http://172.31.90.1:9922') + '/approve' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -157,7 +156,6 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "a1000000-0000-4000-8000-0000000cc001",
           "name": "Sandbox Shim Token"
         }
       },
@@ -168,7 +166,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://172.31.90.1:9922/plan",
+        "url": "={{ ($env.SHIM_URL || 'http://172.31.90.1:9922') + '/plan' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -197,7 +195,6 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "a1000000-0000-4000-8000-0000000cc001",
           "name": "Sandbox Shim Token"
         }
       },
@@ -422,7 +419,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "active": true,
+  "active": false,
   "pinData": {},
   "tags": []
 }

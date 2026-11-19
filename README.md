@@ -43,7 +43,37 @@ anything, and `approve` requires an explicit run id.
 |---|---|
 | `shim.py` | the service (stdlib only, no dependencies) |
 | `sandbox-shim.service` | systemd unit — **source of truth**, symlinked into `~/.config/systemd/user/` |
+| `examples/mock_syschange.py` | executable mock orchestrator for zero-setup local testing |
 | `bridge-check.sh` | one-shot diagnostic for the n8n → shim path |
+
+## Quick Start (Zero-Setup Local Testing)
+
+To test the shim locally without needing the full Linux `syschange` orchestrator or Docker containers:
+
+```bash
+# 1. Point the shim at the bundled mock runner and local test token
+export SYSCHANGE_BIN="$(pwd)/examples/mock_syschange.py"
+export SHIM_TOKEN_FILE="/tmp/test_token"
+export SHIM_BIND="127.0.0.1"
+echo "secret123" > /tmp/test_token && chmod 600 /tmp/test_token
+
+# 2. Start the service
+python3 shim.py &
+SHIM_PID=$!
+
+# 3. Test /plan and /approve via curl
+curl -s -X POST http://127.0.0.1:9922/plan \
+  -H "X-Sandbox-Token: secret123" \
+  -H "Content-Type: application/json" \
+  -d '{"request": "clean temp cache"}'
+
+curl -s -X POST http://127.0.0.1:9922/approve \
+  -H "X-Sandbox-Token: secret123" \
+  -H "Content-Type: application/json" \
+  -d '{"run_id": "run-mock-demo1"}'
+
+kill $SHIM_PID
+```
 
 ## Paths
 

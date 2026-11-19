@@ -179,6 +179,9 @@ class Handler(BaseHTTPRequestHandler):
             n = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             n = 0
+        if n < 0:
+            self._send(400, {"error": "invalid Content-Length"})
+            return
         if n > 64 * 1024:
             self._send(413, {"error": "body too large"})
             return

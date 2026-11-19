@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
 import re
+import pytest
 
 from shim import parse_plan
 
@@ -46,3 +48,33 @@ def test_run_id_validation_blocks_shell_injection() -> None:
     assert re.fullmatch(pattern, "run-20260929-abc1") is not None
     assert re.fullmatch(pattern, "run-1; rm -rf /") is None
     assert re.fullmatch(pattern, "../run-1") is None
+
+
+def test_negative_content_length_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import threading
+    from http.client import HTTPConnection
+    from http.server import ThreadingHTTPServer
+    from shim import Handler
+
+    token_file = tmp_path / "token"
+    token_file.write_text("test-token\n", encoding="utf-8")
+    monkeypatch.setattr("shim.TOKEN_FILE", str(token_file))
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    port = server.server_address[1]
+    t = threading.Thread(target=server.serve_forever, daemon=True)
+    t.start()
+
+    try:
+        conn = HTTPConnection("127.0.0.1", port, timeout=2)
+        conn.putrequest("POST", "/plan")
+        conn.putheader("X-Sandbox-Token", "test-token")
+        conn.putheader("Content-Length", "-1")
+        conn.endheaders()
+        res = conn.getresponse()
+        assert res.status == 400
+        data = res.read()
+        assert b"invalid Content-Length" in data
+    finally:
+        server.shutdown()
+        server.server_close()
